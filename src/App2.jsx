@@ -3,59 +3,86 @@ import { BarChart, Bar, Rectangle, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 
 import matches from './data/data2.json'
 
-// started by manipulating data, first i know my strength is manipulating data 
-// i just have to get the correct data in the right variables so i can do work with it
-// planned what info i need such as top agents so i knew one part was to count agents by map
-
-
-// function to return number of things based on certain criteria
-// top 6 agents banned and picked, and for each agent note how many picks and bans of each level it has
-
-// sort by team and know how to see what they banned the most
-
-// ideas for optional features: 
-
-// learn how to graph each agent by bans and picks
+const agents = ['Brimstone', 'Omen', 'Viper', 'Raze', 'Cypher',
+  'Sage', 'Sova', 'Phoenix', 'Jett', 'Breach',
+  'Reyna', 'Killjoy', 'Skye', 'Yoru', 'Astra',
+  'KAY/O', 'Chamber', 'Neon', 'Fade', 'Harbor',
+  'Gekko', 'Deadlock', 'Iso', 'Clove', 'Vyse',
+  'Tejo', 'Waylay']
 
 function agents_by_map(map, action, matches) {
+  /*
+
+  */
     const agents = [
         'Brimstone', 'Omen', 'Viper', 'Raze', 'Cypher',
         'Sage', 'Sova', 'Phoenix', 'Jett', 'Breach',
         'Reyna', 'Killjoy', 'Skye', 'Yoru', 'Astra',
         'KAY/O', 'Chamber', 'Neon', 'Fade', 'Harbor',
         'Gekko', 'Deadlock', 'Iso', 'Clove', 'Vyse',
-        'Tejo', 'Waylay'
-      ];
-      
-      const pick_count = agents.map(agent => ({
-        agent, 
-        count: 0
-      }));
+        'Tejo', 'Waylay'];
+
+    const pick_count = agents.map(agent => ({
+      agent,
+      count: 0
+    }));
 
     matches.forEach(match => {
-        console.log(match.draft_data.state[0])
-        console.log(match.draft_data.maps[0])
-
-        if (match.draft_data.maps.length == 1) {
-            console.log('length 1')
-        }
-
-        if (match.draft_data.maps.length == 3) {
-            if (match.draft_data.maps[0] == map) {
-                match.draft_data.maps[0].forEach(item => {
-                    console.log(item)
-                })
+      // bo3 case
+      if (match.draft_data.maps.length == 3) {
+        if (match.draft_data.maps[0] == map) {
+          match.draft_data.state[0].forEach(item => {
+            if (item.action === action) {
+              const agentEntry = pick_count.find(entry => entry.agent === item.agent);
+              if (agentEntry) {
+                agentEntry.count += 1;
+              }
             }
+          })
         }
-
-    })
+        if (match.draft_data.maps[1] == map) {
+          match.draft_data.state[1].forEach(item => {
+            if (item.action === action) {
+              const agentEntry = pick_count.find(entry => entry.agent === item.agent);
+              if (agentEntry) {
+                agentEntry.count += 1;
+              }
+            }
+          })
+        }
+        if (match.draft_data.maps[2] == map) {
+          match.draft_data.state[2].forEach(item => {
+            if (item.action === action) {
+              const agentEntry = pick_count.find(entry => entry.agent === item.agent);
+              if (agentEntry) {
+                agentEntry.count += 1;
+              }
+            }
+          })
+        }
+      }
+  })
+  pick_count.sort((a,b) => b.count - a.count)
+  return pick_count
 }
 
-agents_by_map('Lotus', 'PICK', matches)
-// split fracture lotus ascent haven icebox pearl
 
 function count_agent_map_action(agent, action, matches) {
-  let agent_count = new Array(16).fill(0);
+  /*
+  count_agent_map_action will return an array for how many times an agent was picked in each pick phase.
+
+  count_agent_map_action takes 3 parameters:
+  - agent
+    The agent you want to track, e.g. "Omen" (Must be properly stylized, like "KAY/O" not "KAYO")
+  - action
+    Either "PICK" or "BAN"
+  - matches
+    The dataset to use, probably "matches" that was imported on the top of the script
+
+  Ex: count_agent_map_action("Omen", "PICK", matches) will return an array
+  of times Omen was picked in a match, sorted by decreasing order of the pick order
+  */
+  let agent_count = new Array(16).fill(0); // 16 spots for 16 pick/ban phases
 
   matches.forEach(match => {
     match.draft_data.state.forEach(map => {
@@ -67,12 +94,12 @@ function count_agent_map_action(agent, action, matches) {
     });
   });
 
-
   const phaseCountPairs = agent_count.map((count, phase) => ({
     phase, count
   }))
   phaseCountPairs.sort((a,b) => b.count - a.count)
 
+  // manual overwriting of each phase correlating with # pick
   if (action == "PICK") {
     phaseCountPairs.forEach(item => {
       if (item.phase == 0) { 
@@ -120,7 +147,18 @@ function count_agent_map_action(agent, action, matches) {
 }
 
 function agent_team(agent, action, matches) {
-  // { "Mad Science": 3, "fucku4": 5, … }
+  /* agent_team returns the amount of time 'agent' was 'action' by all teams
+  in decreasing order
+
+  Ex: agent_team("Omen", "PICK", matches) will return array of teams who
+  picked Omen the most, in decreasing order
+
+  agent_team takes 3 parameters:
+  - agent
+    The agent you want to track, e.g. "Omen" (Must be properly stylized, like "KAY/O" not "KAYO")
+  - action
+    Either "PICK" or "BAN"
+  */
   const teamCounts = {};
 
   matches.forEach(match => {
@@ -130,39 +168,38 @@ function agent_team(agent, action, matches) {
     state.forEach(mapPhases => {
       mapPhases.forEach(phase => {
         if (phase.agent === agent && phase.action === action) {
-          // phase.team is "A" or "B"
-          const teamName = phase.team === "A" ? team_a : team_b;
-          teamCounts[teamName] = (teamCounts[teamName] || 0) + 1;
+          let teamName;
+          if (phase.team === "A") {
+            teamName = team_a;
+          } else {
+            teamName = team_b;
+          }
+
+          if (teamCounts[teamName]) {
+            teamCounts[teamName] = teamCounts[teamName] + 1;
+          } else {
+            teamCounts[teamName] = 1;
+          }
         }
       });
     });
   });
 
-  // Convert to [{ team, count }, …] and sort descending by count
   return Object
     .entries(teamCounts)
     .map(([team, count]) => ({ team, count }))
     .sort((a, b) => b.count - a.count);
 }
 
-
-console.log(agent_team("Tejo", "BAN", matches))
-
 function total_in_array(array) {
+// sums up values in an array
+// used to find total picks/bans in an array
   let sum = 0
   array.forEach(value =>{
     sum += value.count
   })
   return sum
 }
-
-
-const agents = ['Brimstone', 'Omen', 'Viper', 'Raze', 'Cypher',
-                'Sage', 'Sova', 'Phoenix', 'Jett', 'Breach',
-                'Reyna', 'Killjoy', 'Skye', 'Yoru', 'Astra',
-                'KAY/O', 'Chamber', 'Neon', 'Fade', 'Harbor',
-                'Gekko', 'Deadlock', 'Iso', 'Clove', 'Vyse',
-                'Tejo', 'Waylay']
 
 let pick_list = []
 let ban_list = []
@@ -181,16 +218,19 @@ agents.forEach(agent => {
   });
 });
 
+// sorts both pick_list and ban_list in decreasing order
 pick_list.sort((a, b) => b.total - a.total)
 ban_list.sort((a, b) => b.total - a.total)
 
 
+// combinedData for graphing purposes
+// aggregates the ban and pick info into one variable
 const combinedData = pick_list.map(pick => {
-  const ban = ban_list.find(b => b.agent === pick.agent);
+  const ban = ban_list.find(banEntry => banEntry.agent === pick.agent);
   return {
     agent: pick.agent,
     picks: pick.total,
-    bans: ban ? ban.total : 0
+    bans: ban ? ban.total : 0 // if ban exists use ban.total, 0 otherwise
   };
 });
 
@@ -200,13 +240,13 @@ const MostPickedAgentsSummary = () => {
     <div>
       <h2>Most Picked Agent</h2>
       <ul>
-        {pick_list.slice(0, 1).map((entry, index) => (
-          <li key={index}>
+        {pick_list.slice(0, 1).map((entry) => (
+          <li>
             <strong>{entry.agent}</strong> — Total Picks: {entry.total}
             <br></br>
             <ul>
-              {entry.picks.slice(0,1).map((pick, phaseIndex) => (
-                <li key={phaseIndex}>{pick.phase}: {pick.count}</li>
+              {entry.picks.slice(0,1).map((pick) => (
+                <li>{pick.phase}: {pick.count}</li>
               ))}
             </ul>
           </li>
@@ -221,13 +261,13 @@ const MostBannedAgentsSummary = () => {
     <div>
       <h2>Most Banned Agent</h2>
       <ul>
-        {ban_list.slice(0, 1).map((entry, index) => (
-          <li key={index}>
+        {ban_list.slice(0, 1).map((entry) => (
+          <li>
             <strong>{entry.agent}</strong> — Total Bans: {entry.total}
             <br></br>
             <ul>
-              {entry.bans.slice(0,1).map((pick, phaseIndex) => (
-                <li key={phaseIndex}>{pick.phase}: {pick.count}</li>
+              {entry.bans.slice(0,1).map((pick) => (
+                <li>{pick.phase}: {pick.count}</li>
               ))}
             </ul>
           </li>
@@ -236,22 +276,20 @@ const MostBannedAgentsSummary = () => {
     </div>
   );
 };
-
-
 
 const MostPickedAgents = () => {
   return (
     <div>
       <h2>Top 6 Picked Agents</h2>
       <ul>
-        {pick_list.slice(0, 6).map((entry, index) => (
-          <li key={index}>
+        {pick_list.slice(0, 6).map((entry) => (
+          <li>
             <strong>{entry.agent}</strong> — Total Picks: {entry.total}
             <br></br>
             <strong>Picks</strong>
             <ul>
-              {entry.picks.slice(0,10).map((pick, phaseIndex) => (
-                <li key={phaseIndex}>{pick.phase}: {pick.count}</li>
+              {entry.picks.slice(0,10).map((pick) => (
+                <li>{pick.phase}: {pick.count}</li>
               ))}
             </ul>
           </li>
@@ -261,20 +299,19 @@ const MostPickedAgents = () => {
   );
 };
 
-
 const MostBannedAgents = () => {
   return (
     <div>
       <h2>Top 6 Banned Agents</h2>
       <ul>
-        {ban_list.slice(0, 6).map((entry, index) => (
-          <li key={index}>
+        {ban_list.slice(0, 6).map((entry) => (
+          <li>
             <strong>{entry.agent}</strong> — Total Bans: {entry.total}
             <br></br>
             <strong>Bans</strong>
             <ul>
-              {entry.bans.slice(0,6).map((pick, phaseIndex) => (
-                <li key={phaseIndex}>{pick.phase}: {pick.count}</li>
+              {entry.bans.slice(0,6).map((pick) => (
+                <li>{pick.phase}: {pick.count}</li>
               ))}
             </ul>
           </li>
@@ -289,35 +326,23 @@ const AgentPickBanHorizontalChart = ({ data }) => {
     <div style={{ width: '100%', height: 2000 }}>
       <h3>Picks and Bans per Agent</h3>
       <ResponsiveContainer>
-        <BarChart
-          layout="vertical"
-          data={data}
-          margin={{ top: 20, right: 30, left: 100, bottom: 500 }}
-        >
+        <BarChart layout="vertical" data={data} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
           <XAxis type="number" />
           <YAxis type="category" dataKey="agent" />
           <Tooltip />
           <Legend />
-          <Bar dataKey="picks" fill="#8884d8" />
-          <Bar dataKey="bans" fill="#82ca9d" />
+          <Bar dataKey="picks" fill="#0c9e13" />
+          <Bar dataKey="bans" fill="#fa5e5e" />
         </BarChart>
       </ResponsiveContainer>
     </div>
   );
 };
 
-agent_team(pick_list[0].agent, "PICK", matches)[0] // team most picked 1st picked agent
-agent_team(pick_list[1].agent, "PICK", matches)[0]
-agent_team(pick_list[2].agent, "PICK", matches)[0]
-agent_team(pick_list[3].agent, "PICK", matches)[0]
-console.log(agent_team(pick_list[4].agent, "PICK", matches))
-console.log(agent_team(pick_list[5].agent, "PICK", matches))
-console.log(agent_team(pick_list[6].agent, "PICK", matches))
-
 const MostPickedByTeams = () => {
   return (
     <div>
-      <h2>Top 6 Picked Agents, by Team</h2>
+      <h2>Top 5 Picked Agents, by Team</h2>
       <ul>
         <strong>{pick_list[0].agent}</strong> | {agent_team(pick_list[0].agent, "PICK", matches)[0].team}: {agent_team(pick_list[0].agent, "PICK", matches)[0].count}
       </ul>
@@ -340,7 +365,7 @@ const MostPickedByTeams = () => {
 const MostBannedByTeams = () => {
   return (
     <div>
-      <h2>Top 6 Banned Agents, by Team</h2>
+      <h2>Top 5 Banned Agents, by Team</h2>
       <ul>
         <strong>{ban_list[0].agent}</strong> | {agent_team(ban_list[0].agent, "BAN", matches)[0].team}: {agent_team(ban_list[0].agent, "BAN", matches)[0].count}
       </ul>
@@ -360,25 +385,113 @@ const MostBannedByTeams = () => {
   );
 };
 
-const App2 = () => {
+let ascent_picklist = agents_by_map('ascent', 'PICK', matches)
+let fracture_picklist = agents_by_map('fracture', 'PICK', matches)
+let haven_picklist = agents_by_map('haven', 'PICK', matches)
+let icebox_picklist = agents_by_map('icebox', 'PICK', matches)
+let lotus_picklist = agents_by_map('lotus', 'PICK', matches)
+let split_picklist = agents_by_map('split', 'PICK', matches)
+let pearl_picklist = agents_by_map('pearl', 'PICK', matches)
+
+let ascent_banlist = agents_by_map('ascent', 'BAN', matches)
+let fracture_banlist = agents_by_map('fracture', 'BAN', matches)
+let haven_banlist = agents_by_map('haven', 'BAN', matches)
+let icebox_banlist = agents_by_map('icebox', 'BAN', matches)
+let lotus_banlist = agents_by_map('lotus', 'BAN', matches)
+let split_banlist = agents_by_map('split', 'BAN', matches)
+let pearl_banlist = agents_by_map('pearl', 'BAN', matches)
+
+const DataList = ({ data = [], limit = 10 }) => {
   return (
     <div>
-      <h1>Agent Stats</h1>
-      <MostBannedByTeams />
-      <MostPickedByTeams />
-      <MostPickedAgentsSummary />
-      <MostBannedAgentsSummary />
-
-      <MostPickedAgents />
-      <MostBannedAgents />
-
-      <AgentPickBanHorizontalChart data={combinedData} />
-
-
+      <ul>
+        {data.slice(0, limit).map((item, index) => (
+          <li key={index}>
+            {item.agent}: {item.count} picks
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };
 
+const App2 = () => {
+  return (
+    <div>
+      <h1>Agent Stats</h1>
 
+      <AgentPickBanHorizontalChart data={combinedData} />
+
+      <div class="row">
+        <div class="column"><MostBannedByTeams /></div>
+        <div class="column"><MostPickedByTeams /></div>
+      </div>
+
+      <div class="row">
+        <div class="column"><MostPickedAgentsSummary /></div>
+        <div class="column"><MostBannedAgentsSummary /></div>
+      </div>
+
+      <div class="row">
+        <div class="column"><MostPickedAgents /></div>
+        <div class="column"><MostBannedAgents /></div>
+      </div>
+
+      <div class="space"></div>
+      <div class="space"></div>
+      <div class="space"></div>
+      <div class="space"></div>
+
+      <div class="row">
+        <div class="column">
+          <h2>Most Picked Agents on Ascent:</h2>
+          <DataList data={ascent_picklist} limit={10} />
+
+          <h2>Most Picked Agents on Fracture:</h2>
+          <DataList data={fracture_picklist} limit={10} />
+
+          <h2>Most Picked Agents on Haven:</h2>
+          <DataList data={haven_picklist} limit={10} />
+
+          <h2>Most Picked Agents on Icebox:</h2>
+          <DataList data={icebox_picklist} limit={10} />
+
+          <h2>Most Picked Agents on Lotus:</h2>
+          <DataList data={lotus_picklist} limit={10} />
+
+          <h2>Most Picked Agents on Split:</h2>
+          <DataList data={split_picklist} limit={10} />
+
+          <h2>Most Picked Agents on Pearl:</h2>
+          <DataList data={pearl_picklist} limit={10} />
+        </div>
+
+        <div class="column">
+          <h2>Most Banned Agents on Ascent:</h2>
+          <DataList data={ascent_banlist} limit={10} />
+
+          <h2>Most Banned Agents on Fracture:</h2>
+          <DataList data={fracture_banlist} limit={10} />
+
+          <h2>Most Banned Agents on Haven:</h2>
+          <DataList data={haven_banlist} limit={10} />
+
+          <h2>Most Banned Agents on Icebox:</h2>
+          <DataList data={icebox_banlist} limit={10} />
+
+          <h2>Most Banned Agents on Lotus:</h2>
+          <DataList data={lotus_banlist} limit={10} />
+
+          <h2>Most Banned Agents on Split:</h2>
+          <DataList data={split_banlist} limit={10} />
+
+          <h2>Most Banned Agents on Pearl:</h2>
+          <DataList data={pearl_banlist} limit={10} />
+        </div>
+      </div>
+
+    </div>
+  );
+};
 
 export default App2;

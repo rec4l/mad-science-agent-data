@@ -1,12 +1,18 @@
-# React + Vite
+# Mad Science Draft 2 and 3 Pick/Ban Analysis
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Functionality
 
-Currently, two official plugins are available:
+Allows switching between Mad Science Draft 2 and 3
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Top Agent Picked, along with the most frequent pick order for that agent
+Top Agent Banned, along with the most frequent ban order for that agent
 
-## Expanding the ESLint configuration
+Top 5 agents picked, with all pick orders in decreasing sort for that agent
+Top 5 agents banned, with all ban orders in decreasing sort for that agent
 
-If you are developing a production application, we recommend using TypeScript and enable type-aware lint rules. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Teams that picked the top 5 picked agents the most
+Teams that banned the top 5 banned agents the most
+
+Graph of all agent picks and bans, sorted by decreasing order of picks
+
+Top 10 agents picked/banned on every map
