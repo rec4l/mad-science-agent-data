@@ -4,7 +4,7 @@ import App2 from "./App2.jsx";
 
 
 const AppToggle = () => {
-  const [showFirst, setShowFirst] = useState(true);
+  const [showFirst, setShowFirst] = useState(false); // start w/ draft 3
 
   return (
     <div>

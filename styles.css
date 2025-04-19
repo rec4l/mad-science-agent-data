@@ -1,49 +1,174 @@
-* {
+  :root {
+    --primary-color: #00ffff;
+    --secondary-color: #ffffff;
+    --tertiary-color: #c9c9c9;
+    --background-color: #0D0A0B;
+  }
+  
+  * {
     box-sizing: border-box;
   }
 
   body {
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--background-color)
   }
 
-  /* Style the header */
-  .header {
-    background-color: #f1f1f1;
-    padding: 30px;
+  p {
+    color: var(--secondary-color)
+  }
+
+  .agent-name {
+    font-size: 3.5em;
+    margin-top: 0em;
+    margin-bottom: 0em;
+  }
+
+  .agent-top-text {
+    margin-top: 0.5em;
+    padding-bottom: 1.3em;
+    color: var(--secondary-color);
+    font-size: 1.5em
+  }
+
+ .agent-bottom-text {
+    margin-top: 0em;
+    padding-bottom: 2em;
+    font-size: 1.5em;
+    color: var(--secondary-color)
+  }  
+  
+  .agent-subtext {
+    margin-top: 0em;
+    padding-bottom: 0em;
+    font-size: 1em;
+    color: var(--secondary-color);
+  }
+
+  table tr:not(:last-child) {
+    border-bottom: 1px solid #7c7c7c;
+    border-spacing: 0 0.5em;
+  }
+
+
+
+  table {
+    width: 95%;        /* fake right padding */
+    border-collapse: collapse;
+    margin-top: 1em;
+    margin-left: 1em;
+    padding-right: 1em;
+  }
+
+  .team-pref-text {
+    margin-top: 0em;
+    margin-bottom: 0em;
+  }
+
+  .right-align {
+    text-align: right
+  }
+
+  .center-align {
     text-align: center;
-    font-size: 35px;
+  }
+  .gray-text {
+    color: var(--tertiary-color);
   }
 
-  /* Container for flexboxes */
-  .row {
-    display: -webkit-flex;
-    display: flex;
+  .size-two-text {
+    font-size: 1.5em
   }
 
-  .space {
-    padding-bottom: 300px;
+  .size-three-text {
+    font-size: 0.8em
+  }
+  .highlight-text {
+    color: var(--primary-color);
   }
 
-  /* Create three equal columns that sits next to each other */
-  .column {
-    -webkit-flex: 1;
-    -ms-flex: 1;
-    flex: 1;
-    padding: 10px;
-    height: 300px; /* Should be removed. Only for demonstration */
+  .table-left-padding {
+    padding-left: 10em;
   }
 
-  /* Style the footer */
-  .footer {
-    background-color: #f1f1f1;
-    padding: 10px;
+  .white-text {
+    color: var(--secondary-color)
+  }
+
+  a {
+    color: var(--secondary-color)
+  }
+
+  .center {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
     text-align: center;
   }
 
-  /* Responsive layout - makes the three columns stack on top of each other instead of next to each other */
-  @media (max-width: 600px) {
-    .row {
-      -webkit-flex-direction: column;
-      flex-direction: column;
-    }
+  li, ul {
+    color: #959595
+  }
+
+.no-break {
+  white-space: nowrap;
+}
+
+  h1 {
+    color: var(--primary-color);
+    text-align: center;
+    font-size: 3em;
+    font-family: 'ValorantFont', sans-serif;
+    margin-top: 0em;
+    margin-bottom: 0.5em;
+}
+
+
+  h2 {
+    color: var(--primary-color);
+    text-align: center;
+    font-size: 1.3em
+  }
+
+  h5 {
+    text-align: center;
+    padding-top: 0.3em;
+    font-size: 1.3em;
+  }
+
+  .grid-line1 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 1.5rem;
+    padding: 1rem;
+    padding-top: 0em;
+  }
+
+  .grid-line2 {
+    display: grid;
+    grid-template-columns: 1.5fr 1.5fr;
+    gap: 1.5rem;
+    padding: 1rem;
+  }
+
+  .grid-line3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+  
+  .grid-item {
+    background-color: #454955;
+    border: 0px solid rgb(255, 255, 255);
+    padding: 1rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .chart {
+    padding-left: 2em;
+    padding-bottom: 6em;
+    background-color: #1d1d1d;
   }

@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react';
-import { BarChart, Bar, Rectangle, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, Rectangle, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PolarGrid } from 'recharts';
 
 import matches from './data/data2.json'
 
@@ -12,9 +12,21 @@ const agents = ['Brimstone', 'Omen', 'Viper', 'Raze', 'Cypher',
 
 function agents_by_map(map, action, matches) {
   /*
+  agents_by_map will return an array for how many times an agent was (action) in a match
 
+  count_agent_map_action takes 3 parameters:
+  - map
+    The map you want to track (must be lowercase stylized, e.g. "split")
+  - action
+    Either "PICK" or "BAN"
+  - matches
+    The dataset to use, probably "matches" that was imported on the top of the script
+
+  Ex: agents_by_map('split', 'PICK', matches) returns array of agents picked on split
+  in decreasing order
   */
-    const agents = [
+
+  const agents = [
         'Brimstone', 'Omen', 'Viper', 'Raze', 'Cypher',
         'Sage', 'Sova', 'Phoenix', 'Jett', 'Breach',
         'Reyna', 'Killjoy', 'Skye', 'Yoru', 'Astra',
@@ -28,7 +40,7 @@ function agents_by_map(map, action, matches) {
     }));
 
     matches.forEach(match => {
-      // bo3 case
+      // bo3 case , note that bo5 specifically not handled
       if (match.draft_data.maps.length == 3) {
         if (match.draft_data.maps[0] == map) {
           match.draft_data.state[0].forEach(item => {
@@ -61,11 +73,26 @@ function agents_by_map(map, action, matches) {
           })
         }
       }
+
+      // bo1 case
+      if (match.draft_data.maps.length == 1) {
+        if (match.draft_data.maps[0] == map) {
+          match.draft_data.state[0].forEach(item => {
+            if (item.action === action) {
+              const agentEntry = pick_count.find(entry => entry.agent === item.agent);
+              if (agentEntry) {
+                agentEntry.count += 1;
+              }
+            }
+          })
+        }
+      }
+
+
   })
   pick_count.sort((a,b) => b.count - a.count)
   return pick_count
 }
-
 
 function count_agent_map_action(agent, action, matches) {
   /*
@@ -102,7 +129,7 @@ function count_agent_map_action(agent, action, matches) {
   // manual overwriting of each phase correlating with # pick
   if (action == "PICK") {
     phaseCountPairs.forEach(item => {
-      if (item.phase == 0) { 
+      if (item.phase == 0) {
         item.phase = '1st Pick'
       } else if (item.phase == 1) {
         item.phase = '2nd Pick'
@@ -234,24 +261,25 @@ const combinedData = pick_list.map(pick => {
   };
 });
 
-
 const MostPickedAgentsSummary = () => {
   return (
     <div>
-      <h2>Most Picked Agent</h2>
-      <ul>
-        {pick_list.slice(0, 1).map((entry) => (
-          <li>
-            <strong>{entry.agent}</strong> — Total Picks: {entry.total}
-            <br></br>
-            <ul>
-              {entry.picks.slice(0,1).map((pick) => (
-                <li>{pick.phase}: {pick.count}</li>
-              ))}
-            </ul>
-          </li>
-        ))}
-      </ul>
+      {pick_list.slice(0, 1).map((entry) => (
+        <div key={entry.agent}>
+          <div className="center">
+            <h3 className="agent-top-text white-text size-two-text">Most Picked Agent:</h3>
+            <h2 className="agent-name">{entry.agent.toUpperCase()}</h2>
+            <h3 className="agent-bottom-text">{entry.total} picks</h3>
+            {entry.picks.slice(0, 1).map((pick) => (
+              <p className="agent-subtext" key={pick.phase}>
+                <span className="gray-text">{entry.agent}'s most common pick phase is <br /></span>
+                <strong>{pick.phase} </strong>
+                <span className="gray-text">with</span> <strong>{pick.count} picks</strong>.
+              </p>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 };
@@ -259,20 +287,22 @@ const MostPickedAgentsSummary = () => {
 const MostBannedAgentsSummary = () => {
   return (
     <div>
-      <h2>Most Banned Agent</h2>
-      <ul>
-        {ban_list.slice(0, 1).map((entry) => (
-          <li>
-            <strong>{entry.agent}</strong> — Total Bans: {entry.total}
-            <br></br>
-            <ul>
-              {entry.bans.slice(0,1).map((pick) => (
-                <li>{pick.phase}: {pick.count}</li>
-              ))}
-            </ul>
-          </li>
-        ))}
-      </ul>
+      {ban_list.slice(0, 1).map((entry) => (
+        <div>
+          <div className="center">
+            <h3 class="agent-top-text white-text size-two-text">Most Banned Agent:</h3>
+            <h2 class="agent-name">{entry.agent.toUpperCase()}</h2>
+            <h3 class="agent-bottom-text">{entry.total} bans</h3>
+            {entry.bans.slice(0, 1).map((ban) => (
+                <p class="agent-subtext">
+                  <span class="gray-text">{entry.agent}'s most common ban phase is <br /></span>
+                  <strong>{ban.phase} </strong>
+                  <span class="gray-text">with</span> <strong>{ban.count} bans</strong>.
+                </p>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 };
@@ -280,21 +310,38 @@ const MostBannedAgentsSummary = () => {
 const MostPickedAgents = () => {
   return (
     <div>
-      <h2>Top 6 Picked Agents</h2>
-      <ul>
-        {pick_list.slice(0, 6).map((entry) => (
-          <li>
-            <strong>{entry.agent}</strong> — Total Picks: {entry.total}
-            <br></br>
-            <strong>Picks</strong>
-            <ul>
-              {entry.picks.slice(0,10).map((pick) => (
-                <li>{pick.phase}: {pick.count}</li>
-              ))}
-            </ul>
-          </li>
-        ))}
-      </ul>
+      <h2 class="size-two-text">Top 6 Picked Agents</h2>
+      <table>
+        <tbody>
+          {pick_list.slice(0, 6).map((entry, index) => {
+            const peakPick = entry.picks.sort((a, b) => b.count - a.count)[0];
+
+            return (
+              <tr>
+                <td>
+                  <strong className="highlight-text">
+                    {index + 1}. {entry.agent.toUpperCase()}
+                  </strong>
+                  <div className="gray-text size-three-text">
+                    {entry.picks
+                      .slice(0, 10)
+                      .map((pick) => `${pick.phase}: ${pick.count}`)
+                      .join(' • ')}
+                  </div>
+                </td>
+
+                <td className="right-align table-left-padding">
+                  <span className="no-break white-text">Total Picks: {entry.total}</span>
+                  <br />
+                  <span className="no-break white-text">
+                    Peak: {peakPick.phase}
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 };
@@ -302,39 +349,39 @@ const MostPickedAgents = () => {
 const MostBannedAgents = () => {
   return (
     <div>
-      <h2>Top 6 Banned Agents</h2>
-      <ul>
-        {ban_list.slice(0, 6).map((entry) => (
-          <li>
-            <strong>{entry.agent}</strong> — Total Bans: {entry.total}
-            <br></br>
-            <strong>Bans</strong>
-            <ul>
-              {entry.bans.slice(0,6).map((pick) => (
-                <li>{pick.phase}: {pick.count}</li>
-              ))}
-            </ul>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-};
+      <h2 className="size-two-text">Top 6 Banned Agents</h2>
+      <table>
+        <tbody>
+          {ban_list.slice(0, 6).map((entry, index) => {
+            const peakBan = entry.bans.sort((a, b) => b.count - a.count)[0];
 
-const AgentPickBanHorizontalChart = ({ data }) => {
-  return (
-    <div style={{ width: '100%', height: 2000 }}>
-      <h3>Picks and Bans per Agent</h3>
-      <ResponsiveContainer>
-        <BarChart layout="vertical" data={data} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
-          <XAxis type="number" />
-          <YAxis type="category" dataKey="agent" />
-          <Tooltip />
-          <Legend />
-          <Bar dataKey="picks" fill="#0c9e13" />
-          <Bar dataKey="bans" fill="#fa5e5e" />
-        </BarChart>
-      </ResponsiveContainer>
+            return (
+              <tr key={entry.agent}>
+                <td>
+                  <strong className="highlight-text">
+                    {index + 1}. {entry.agent.toUpperCase()}
+                  </strong>
+                  <div className="gray-text size-three-text">
+                    {entry.bans
+                      .filter(ban => ban.count !== 0) // exclude bans with count 0 as edge case
+                      .slice(0, 6)
+                      .map((ban) => `${ban.phase}: ${ban.count}`)
+                      .join(' • ')}
+                  </div>
+                </td>
+
+                <td className="right-align table-left-padding">
+                  <span className="no-break white-text">Total Bans: {entry.total}</span>
+                  <br />
+                  <span className="no-break white-text">
+                    Peak: {peakBan.phase}
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 };
@@ -342,22 +389,24 @@ const AgentPickBanHorizontalChart = ({ data }) => {
 const MostPickedByTeams = () => {
   return (
     <div>
-      <h2>Top 5 Picked Agents, by Team</h2>
-      <ul>
-        <strong>{pick_list[0].agent}</strong> | {agent_team(pick_list[0].agent, "PICK", matches)[0].team}: {agent_team(pick_list[0].agent, "PICK", matches)[0].count}
-      </ul>
-      <ul>
-        <strong>{pick_list[1].agent}</strong> | {agent_team(pick_list[1].agent, "PICK", matches)[0].team}: {agent_team(pick_list[1].agent, "PICK", matches)[0].count}
-      </ul>
-      <ul>
-        <strong>{pick_list[2].agent}</strong> | {agent_team(pick_list[2].agent, "PICK", matches)[0].team}: {agent_team(pick_list[2].agent, "PICK", matches)[0].count}
-      </ul>
-      <ul>
-        <strong>{pick_list[3].agent}</strong> | {agent_team(pick_list[3].agent, "PICK", matches)[0].team}: {agent_team(pick_list[3].agent, "PICK", matches)[0].count}
-      </ul>
-      <ul>
-        <strong>{pick_list[4].agent}</strong> | {agent_team(pick_list[4].agent, "PICK", matches)[0].team}: {agent_team(pick_list[4].agent, "PICK", matches)[0].count}
-      </ul>
+      <p class="highlight-text size-two-text center-align team-pref-text">Team Preferences</p>
+      <p class="size-two-text center-align team-pref-text"><b>Top 5 Picked Agents:</b></p>
+      <table>
+        <tbody>
+          {pick_list.slice(0, 5).map((entry) => {
+            const topTeam = agent_team(entry.agent, "PICK", matches)[0];
+            return (
+              <tr key={entry.agent}>
+                <td><span class="white-text size-two-text">{entry.agent.toUpperCase()}</span></td>
+                <td class="right-align">
+                  <span class="size-two-text highlight-text">{topTeam.team}</span>
+                  <div class="gray-text">{topTeam.count} picks</div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 };
@@ -365,22 +414,67 @@ const MostPickedByTeams = () => {
 const MostBannedByTeams = () => {
   return (
     <div>
-      <h2>Top 5 Banned Agents, by Team</h2>
-      <ul>
-        <strong>{ban_list[0].agent}</strong> | {agent_team(ban_list[0].agent, "BAN", matches)[0].team}: {agent_team(ban_list[0].agent, "BAN", matches)[0].count}
-      </ul>
-      <ul>
-        <strong>{ban_list[1].agent}</strong> | {agent_team(ban_list[1].agent, "BAN", matches)[0].team}: {agent_team(ban_list[1].agent, "BAN", matches)[0].count}
-      </ul>
-      <ul>
-        <strong>{ban_list[2].agent}</strong> | {agent_team(ban_list[2].agent, "BAN", matches)[0].team}: {agent_team(ban_list[2].agent, "BAN", matches)[0].count}
-      </ul>
-      <ul>
-        <strong>{ban_list[3].agent}</strong> | {agent_team(ban_list[3].agent, "BAN", matches)[0].team}: {agent_team(ban_list[3].agent, "BAN", matches)[0].count}
-      </ul>
-      <ul>
-        <strong>{ban_list[4].agent}</strong> | {agent_team(ban_list[4].agent, "BAN", matches)[0].team}: {agent_team(ban_list[4].agent, "BAN", matches)[0].count}
-      </ul>
+      <p className="highlight-text size-two-text center-align team-pref-text">Team Preferences</p>
+      <p className="size-two-text center-align team-pref-text"><b>Top 5 Banned Agents:</b></p>
+      <table>
+        <tbody>
+          {ban_list.slice(0, 5).map((entry) => {
+            const topTeam = agent_team(entry.agent, "BAN", matches)[0];
+            return (
+              <tr key={entry.agent}>
+                <td><span className="white-text size-two-text">{entry.agent.toUpperCase()}</span></td>
+                <td className="right-align">
+                  <span className="size-two-text highlight-text">{topTeam.team}</span>
+                  <div className="gray-text">{topTeam.count} bans</div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+const CustomTooltip = ({ active, payload }) => {
+  // active (if hovering) payload (data associated w/ hover)
+  if (active) {
+    const { agent, picks, bans } = payload[0].payload;
+    return (
+      <div style={{
+        backgroundColor: '#0D0A0B',
+        border: '3px solid #ccc',
+        padding: '10px',
+        borderRadius: '5px',
+        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)'
+      }}>
+        <h4 className="white-text">{agent}</h4>
+        <p><strong>Picks:</strong> {picks}</p>
+        <p><strong>Bans:</strong> {bans}</p>
+      </div>
+    );
+  }
+
+  return null;
+};
+
+const AgentPickBanHorizontalChart = ({ data }) => {
+  return (
+    <div style={{ width: '100%', height: '30em' }}>
+      <h1>Picks and Bans per Agent <a>(hover for details)</a></h1>
+      <ResponsiveContainer>
+        <BarChart layout="vertical"
+                  data={data}
+                  margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
+                  barCategoryGap="100%">
+          <XAxis type="number" />
+          <YAxis type="category" dataKey="agent" angle={-30} />
+          <Tooltip content={<CustomTooltip />} />
+          <Legend />
+          <Bar dataKey="picks" fill="rgb(0, 255, 255)" />
+          <Bar dataKey="bans" fill="rgb(0, 145, 150)" />
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   );
 };
@@ -407,7 +501,7 @@ const DataList = ({ data = [], limit = 10 }) => {
       <ul>
         {data.slice(0, limit).map((item, index) => (
           <li key={index}>
-            {item.agent}: {item.count} picks
+            <a>{item.agent}: {item.count} picks</a>
           </li>
         ))}
       </ul>
@@ -418,75 +512,83 @@ const DataList = ({ data = [], limit = 10 }) => {
 const App2 = () => {
   return (
     <div>
-      <h1>Agent Stats</h1>
 
-      <AgentPickBanHorizontalChart data={combinedData} />
-
-      <div class="row">
-        <div class="column"><MostBannedByTeams /></div>
-        <div class="column"><MostPickedByTeams /></div>
+      <h1>Mad Science Draft 3 Statistics</h1>
+      <div class="grid-line1">
+        <div class="grid-item"><MostPickedAgentsSummary /></div>
+        <div class="grid-item"><MostBannedAgentsSummary /></div>
+        <div class="grid-item"><MostPickedByTeams /></div>
+        <div class="grid-item"><MostBannedByTeams /></div>
       </div>
 
-      <div class="row">
-        <div class="column"><MostPickedAgentsSummary /></div>
-        <div class="column"><MostBannedAgentsSummary /></div>
+      <div class="grid-line2">
+        <div class="grid-item">
+          <MostPickedAgents />
+        </div>
+        <div class="grid-item">
+          <MostBannedAgents />
+        </div>
       </div>
-
-      <div class="row">
-        <div class="column"><MostPickedAgents /></div>
-        <div class="column"><MostBannedAgents /></div>
-      </div>
-
-      <div class="space"></div>
-      <div class="space"></div>
-      <div class="space"></div>
-      <div class="space"></div>
-
-      <div class="row">
-        <div class="column">
-          <h2>Most Picked Agents on Ascent:</h2>
-          <DataList data={ascent_picklist} limit={10} />
-
-          <h2>Most Picked Agents on Fracture:</h2>
-          <DataList data={fracture_picklist} limit={10} />
-
-          <h2>Most Picked Agents on Haven:</h2>
-          <DataList data={haven_picklist} limit={10} />
-
-          <h2>Most Picked Agents on Icebox:</h2>
-          <DataList data={icebox_picklist} limit={10} />
-
-          <h2>Most Picked Agents on Lotus:</h2>
-          <DataList data={lotus_picklist} limit={10} />
-
-          <h2>Most Picked Agents on Split:</h2>
-          <DataList data={split_picklist} limit={10} />
-
-          <h2>Most Picked Agents on Pearl:</h2>
-          <DataList data={pearl_picklist} limit={10} />
+      
+      <div class="grid-item chart">
+          <AgentPickBanHorizontalChart data={combinedData} />
         </div>
 
-        <div class="column">
-          <h2>Most Banned Agents on Ascent:</h2>
+      <div class="grid-line3">
+        <div class="grid-item">
+          <h2>Most Picked Agents (Ascent)</h2>
+          <DataList data={ascent_picklist} limit={10} />
+
+          <h2>Most Banned Agents (Ascent)</h2>
           <DataList data={ascent_banlist} limit={10} />
+        </div>
 
-          <h2>Most Banned Agents on Fracture:</h2>
+        <div class="grid-item">
+          <h2>Most Picked Agents (Fracture)</h2>
+          <DataList data={fracture_picklist} limit={10} />
+
+          <h2>Most Banned Agents (Fracture)</h2>
           <DataList data={fracture_banlist} limit={10} />
+        </div>
 
-          <h2>Most Banned Agents on Haven:</h2>
+        <div class="grid-item">
+          <h2>Most Picked Agents (Haven)</h2>
+          <DataList data={haven_picklist} limit={10} />
+
+          <h2>Most Banned Agents (Haven)</h2>
           <DataList data={haven_banlist} limit={10} />
+        </div>
 
-          <h2>Most Banned Agents on Icebox:</h2>
+        <div class="grid-item">
+          <h2>Most Picked Agents (Icebox)</h2>
+          <DataList data={icebox_picklist} limit={10} />
+
+          <h2>Most Banned Agents (Icebox)</h2>
           <DataList data={icebox_banlist} limit={10} />
+        </div>
 
-          <h2>Most Banned Agents on Lotus:</h2>
+        <div class="grid-item">
+          <h2>Most Picked Agents (Lotus)</h2>
+          <DataList data={lotus_picklist} limit={10} />
+
+          <h2>Most Banned Agents (Lotus)</h2>
           <DataList data={lotus_banlist} limit={10} />
+        </div>
 
-          <h2>Most Banned Agents on Split:</h2>
-          <DataList data={split_banlist} limit={10} />
+        <div class="grid-item">
+          <h2>Most Picked Agents (Pearl)</h2>
+          <DataList data={pearl_picklist} limit={10} />
 
-          <h2>Most Banned Agents on Pearl:</h2>
+          <h2>Most Banned Agents (Pearl)</h2>
           <DataList data={pearl_banlist} limit={10} />
+        </div>
+
+        <div class="grid-item">
+          <h2>Most Picked Agents (Split)</h2>
+          <DataList data={split_picklist} limit={10} />
+
+          <h2>Most Banned Agents (Split)</h2>
+          <DataList data={split_banlist} limit={10} />
         </div>
       </div>
 
